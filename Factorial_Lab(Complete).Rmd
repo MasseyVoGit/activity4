@@ -1,0 +1,203 @@
+---
+title: "ANOVA Lab"
+author: "Massey Vo"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+#do not remove this code
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Important reminders
+
+With Rmarkdown, make sure all your code is between the between the opening and closing ``` marks and to leave the code in curly brackets intact. The code in curly brackets tells Rmarkdown what to keep when you knit your document.
+
+Depending on your computer, you may need to install packages to answer some questions. Regardless of whether the package is installed, you need to load it. For the knitting to work properly, include the *code to import your data and to load packages*. Don't include the code to install the package in this file (write it in the console or use the menus).
+
+Use your notes and slides from Tuesday to complete the steps below.
+
+You can make notes or answer questions with the # in code chunks.
+
+##Lab begins
+##Dataset
+
+**check and set your working directory using code**
+If you don't remember how, check back our Intro to R.
+Your working directory should be a folder and should contain *this file AND the data* you downloaded from Canvas.
+```{r include=TRUE}
+# Set working directory
+setwd("C:/Users/Massey/Downloads/Data")  # Adjust the path if needed
+
+```
+
+
+Import the comma-delimited (csv) dataset "Psy3003_DevPsychopathol_Clean.csv" in R.
+**It is important to include the code to import or your document may not knit**
+If you use the dropdown menus, copy the code from the console (without the ">" symbol at the beginning) and paste it in the code box.
+
+```{r include=TRUE}
+# Import the dataset
+data <- read.csv("Psy3003_DevPsychopathol_Clean.csv")
+
+# View the first few rows to check if it imported correctly
+head(data)
+```
+
+Open the dataset using your environment and check that it imported properly. Notably check that the variable names are at the top in bold. If it did not import properly, check back on slides 43-44 of Intro to R.
+
+When you need information about variables in the dataset, use the same data dictionary as last time. This is the same data, with the parenting scale we made last time. The parenting scale name in the dataset is "parenting" (see last variable in your dataset). We will be using that variable today.
+
+
+##Today's research question
+In the last lab, we tested the following question: **Does education level predict parenting behaviors?**
+Today, we will test the following question: **Is the association between education level and parenting behaviors different for men and women?*
+
+What is the predictor? *The Mother's education level*
+
+What is the outcome? *parenting*
+
+What is the moderator? *the child, sex, age, etc.*
+
+When you write your code, remember that in the slides:
+DV = dependent variable (outcome)
+IV1 = independent variable 1 (predictor)
+IV2 = independent variable 2 (moderator)
+
+>If your answers above are true, the predictor and outcome should match the IV and DV of the ANOVA lab and the moderator should be a new variable that was not in the research question of the ANOVA lab
+
+##Descriptives
+You already looked at the parenting variable and the education variable in the previous labs. But it is the first time you use the sex variable.
+Get the frequencies of the sex variable so you know what you are using.
+(hint: see second slide of "check categorical data" in Data cleaning)
+
+```{r include=TRUE}
+# Get the frequency of the sex variable
+table(data$sex)
+
+```
+
+
+##Assumptions
+You will be testing a Factorial ANOVA because you are looking at how two categorical independent variables (groups) are associated with a continuous dependent variable. First, you need to check your assumptions.
+
+Check if your education variable is categorical (a factor) in R.
+
+```{r include=TRUE}
+# Check if 'educ' is a factor
+class(data$educ)
+
+```
+
+If it is not categorical, re-specify the class of the education variable to be categorical.
+
+```{r include=TRUE}
+# Convert 'educ' to a factor if needed
+data$educ <- as.factor(data$educ)
+
+```
+
+Check that your re-specification worked by checking the class again (check if it is categorical).
+
+```{r include=TRUE}
+# Check again to confirm
+class(data$educ)
+
+```
+
+Check if your sex variable is categorical (a factor) in R.
+
+```{r include=TRUE}
+# Check if 'sex' is a factor
+class(data$sex)
+
+```
+
+If it is not categorical, re-specify the class of the education variable to be categorical.
+
+```{r include=TRUE}
+# Convert 'sex' to a factor if needed
+data$sex <- as.factor(data$sex)
+
+```
+
+Check that your re-specification worked by checking the class again (check if it is categorical).
+
+```{r include=TRUE}
+# Check again to confirm
+class(data$sex)
+
+```
+
+Check if your parenting variable is normal at each level of education*sex (see slide 36 in the lecture).
+Then, using your decision tree (slide 27), write down whether there are problematic deviations from normality. In other words, is the assumption of normality respected?
+*Use liberal criteria: Skewness +/- 2 and kurtosis +/-7*
+
+```{r include=TRUE}
+library(moments)
+
+# Checking normality for parenting variable across education and sex combinations
+aggregate(data$parenting, by = list(data$educ, data$sex), 
+          FUN = function(x) c(skewness = skewness(x), kurtosis = kurtosis(x)))
+
+```
+
+Check the variance of your parenting variable at each level of education*sex (see slide 37 in the lecture).
+Then, using your decision tree (slides 28), write down whether there is a heterogeneity problem. In other words, is the assumption of homogeneity of variance respected? If you are confused about how to do this, also check your ANOVA slides and lab.
+```{r include=TRUE}
+library(car)
+
+# Levene's test for homogeneity of variance
+leveneTest(parenting ~ educ * sex, data = data)
+
+```
+
+
+##Factorial ANOVA
+
+Run your Factorial ANOVA, with education level as the IV1, sex as the IV2 and parenting as the DV.
+
+```{r include=TRUE}
+# Run Factorial ANOVA
+anova_result <- aov(parenting ~ educ * sex, data = data)
+
+# Summary of ANOVA results
+summary(anova_result)
+
+```
+
+Does Education level predict the means on the parenting behaviors scale? Report the F test
+*Yes, education level significantly predicts the means on the parenting behaviors scale. The F test for the main effect of education is 𝐹 ( 2 , 182 ) = 3.814 F(2,182)=3.814, with a p-value of 0.0238, indicating a statistically significant effect of education on parenting behaviors (p < 0.05).*
+
+Does Sex predict the means on the parenting behaviors scale? Report the F test
+*No, sex does not significantly predict the means on the parenting behaviors scale. The F test for the main effect of sex is 𝐹 ( 1 , 182 ) = 1.780 F(1,182)=1.780, with a p-value of 0.1838, indicating that the effect of sex on parenting behaviors is not statistically significant (p > 0.05).*
+
+Is there an interaction effect between education and sex? Report the F test
+*No, there is no significant interaction effect between education and sex on the parenting behaviors scale. The F test for the interaction effect between education and sex is 𝐹 ( 2 , 182 ) = 0.088 F(2,182)=0.088, with a p-value of 0.9160, showing that the interaction effect is not significant (p > 0.05).*
+
+Based on these results, what should be the next steps of your analysis?
+*Since the interaction between education and sex is not significant, the next steps would involve focusing on the main effects of education and possibly conducting post-hoc tests to explore differences between education levels. However, since there is no interaction, testing simple effects for the interaction is not necessary. But as instructed, we will proceed with the simple effects analysis for practice.*
+
+
+
+You will now do an analysis step for when there is an interaction. If there was no interaction, we will pretend there was to practice the code.
+
+Test your simple effects:
+```{r include=TRUE}
+# Subset data for males
+men_data <- subset(data, sex == "men")
+
+# Simple effect of education on parenting for males
+simple_effect_men <- aov(parenting ~ educ, data = men_data)
+summary(simple_effect_men)
+
+```
+
+Is education related to parenting in men?
+*No, education is not significantly related to parenting behaviors in men. The F-test result is 𝐹 ( 2 , 85 ) = 1.697 F(2,85)=1.697, with a p-value of 0.189, indicating no significant effect (p > 0.05).*
+
+Is education related to parenting in women?
+*Yes, education is significantly related to parenting behaviors in women. The F-test result is 𝐹 ( 2 , 96 ) = 4.097 F(2,96)=4.097, with a p-value of 0.0206, indicating a statistically significant effect (p < 0.05).*
+
+Now that you completed each code block, knit this document and upload it to Canvas!
+
